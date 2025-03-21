@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.util.Log
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Button
@@ -76,5 +77,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart(){
+        super.onStart()
+        Log.d("MainActivity", "calling onStart")
     }
 }
