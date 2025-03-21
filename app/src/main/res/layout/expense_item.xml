@@ -18,9 +18,9 @@
         android:id="@+id/expenseAmountTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:text="Amount"
-        android:textSize="18sp"
-        android:layout_weight="1" />
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/deleteButton"

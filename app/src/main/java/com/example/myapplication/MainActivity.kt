@@ -20,6 +20,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnAddExpense: Button
     private lateinit var expenseListLayout: LinearLayout
 
+    //list to store expenses
+    private val expenseList = mutableListOf<Expense>()
+
     //this will load screen from aactivity.xml
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,6 +45,9 @@ class MainActivity : AppCompatActivity() {
             if (name.isNotEmpty() && amountText.isNotEmpty()) {
                 val amount = amountText.toDoubleOrNull() //if i type 10.0 as text convert it to number
                 if (amount != null) {
+                    val expense = Expense(name, amount) //new expense object
+
+                    expenseList.add(expense) //add the expense to the list
                     /*
                     inflater take file expense_xml and created new view from it
                     then it give reference to this new view expenseView that we can add later to our list of expenses
@@ -68,6 +74,7 @@ class MainActivity : AppCompatActivity() {
 
                     //remove the expense from screen when clicked
                     deleteButton.setOnClickListener {
+                        expenseList.remove(expense)
                         expenseListLayout.removeView(expenseView)
                     }
 
