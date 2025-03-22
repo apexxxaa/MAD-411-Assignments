@@ -8,6 +8,8 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 /*
 reference: https://developer.android.com/topic/libraries/view-binding?hl=en
@@ -19,7 +21,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etExpenseNameId: EditText
     private lateinit var etEnterAmount: EditText
     private lateinit var btnAddExpense: Button
-    private lateinit var expenseListLayout: LinearLayout
+    private val expenses = mutableListOf<Expense>()
+    private lateinit var expenseAdapter: ExpenseAdapter
+
+    private lateinit var recyclerViewExpenses: RecyclerView
 
     //this will load screen from aactivity.xml
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +37,11 @@ class MainActivity : AppCompatActivity() {
         etExpenseNameId = findViewById(R.id.etExpenseNameId)
         etEnterAmount = findViewById(R.id.etEnterAmount)
         btnAddExpense = findViewById(R.id.btnAddExpense)
-        expenseListLayout = findViewById(R.id.expenseListLayout)
+        recyclerViewExpenses = findViewById(R.id.recyclerViewExpenses)
+
+        recyclerViewExpenses.layoutManager = LinearLayoutManager(this)
+        expenseAdapter = ExpenseAdapter(expenses)
+        recyclerViewExpenses.adapter = expenseAdapter
 
         //what happens when i click button
         btnAddExpense.setOnClickListener {
@@ -43,34 +52,12 @@ class MainActivity : AppCompatActivity() {
             if (name.isNotEmpty() && amountText.isNotEmpty()) {
                 val amount = amountText.toDoubleOrNull() //if i type 10.0 as text convert it to number
                 if (amount != null) {
-                    /*
-                    inflater take file expense_xml and created new view from it
-                    then it give reference to this new view expenseView that we can add later to our list of expenses
-                    inflate-> new version of layout
-                     */
-                    val expenseView = LayoutInflater.from(this).inflate(R.layout.expense_item, expenseListLayout, false)
 
-                    /*
-                    * binding view inside the inflated layout
-                    * binds the inner view textView from expense Namme and amount and delete button
-                    * */
+                    val newExpense = Expense(name, amount)
+                    expenses.add(newExpense)
+                    expenseAdapter.notifyItemInserted(expenses.size-1)
 
 
-                    val expenseNameTextView: TextView = expenseView.findViewById(R.id.expenseNameTextView)
-                    val expenseAmountTextView: TextView = expenseView.findViewById(R.id.expenseAmountTextView)
-                    val deleteButton: Button = expenseView.findViewById(R.id.deleteButton)
-
-                    //this wil set the tect of expenseName to name and expense amount to amount
-                    expenseNameTextView.text = name
-                    expenseAmountTextView.text = "$$amount"
-
-                    //now we add the inflated expenseview to expenseListlayout so that new expense is displayed on the screen
-                    expenseListLayout.addView(expenseView)
-
-                    //remove the expense from screen when clicked
-                    deleteButton.setOnClickListener {
-                        expenseListLayout.removeView(expenseView)
-                    }
 
                     etExpenseNameId.text.clear()
                     etEnterAmount.text.clear()
@@ -83,4 +70,5 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         Log.d("MainActivity", "calling onStart")
     }
+
 }

@@ -13,7 +13,7 @@
         android:id="@+id/expenseNameId"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Expense Name:"
+        android:text="@string/expense_name"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -24,10 +24,15 @@
         android:id="@+id/etExpenseNameId"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Enter Expense Name"
+        android:hint="@string/enter_expense_name"
+        android:importantForAutofill="no"
+        android:padding="16dp"
+        android:minHeight="48dp"
         app:layout_constraintTop_toBottomOf="@id/expenseNameId"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="TextFields" />
+
 
 
 
@@ -37,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="4dp"
-        android:text="Amount:"
+        android:text="@string/amount"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/etExpenseNameId" />
@@ -46,8 +51,11 @@
         android:id="@+id/etEnterAmount"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Enter Amount"
+        android:hint="@string/enter_amount"
+        android:importantForAutofill="no"
         android:inputType="numberDecimal"
+        android:padding="16dp"
+        android:minHeight="48dp"
         app:layout_constraintTop_toBottomOf="@id/amountId"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -56,20 +64,19 @@
         android:id="@+id/btnAddExpense"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add Expense"
+        android:text="@string/add_expense"
         app:layout_constraintTop_toBottomOf="@id/etEnterAmount"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/expenseListLayout"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewExpenses"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@id/btnAddExpense"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
