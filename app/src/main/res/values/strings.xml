@@ -6,4 +6,7 @@
     <string name="amount">Amount:</string>
     <string name="enter_amount">Enter Amount</string>
     <string name="add_expense">Add Expense</string>
+    <string name="expense_details">expense details</string>
+    <string name="show_details">Show Details</string>
+    <string name="financial_tips">Financial Tips</string>
 </resources>

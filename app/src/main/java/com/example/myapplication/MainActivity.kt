@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -25,11 +27,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var expenseAdapter: ExpenseAdapter
 
     private lateinit var recyclerViewExpenses: RecyclerView
+    private lateinit var btnFinancialTips: Button
+
 
     //this will load screen from aactivity.xml
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Log.d("ActivityLifeCycle", "OnCreate called")
+
 
         /*this will finds the buttons and text fields from xml and connects them to the kotlin
         * SO now i can read what user will type and changes things on the screen
@@ -38,6 +44,8 @@ class MainActivity : AppCompatActivity() {
         etEnterAmount = findViewById(R.id.etEnterAmount)
         btnAddExpense = findViewById(R.id.btnAddExpense)
         recyclerViewExpenses = findViewById(R.id.recyclerViewExpenses)
+        btnFinancialTips = findViewById(R.id.btnFinancialTips)
+
 
         recyclerViewExpenses.layoutManager = LinearLayoutManager(this)
         expenseAdapter = ExpenseAdapter(expenses)
@@ -63,6 +71,11 @@ class MainActivity : AppCompatActivity() {
                     etEnterAmount.text.clear()
                 }
             }
+        }
+
+        btnFinancialTips.setOnClickListener{
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.investopedia.com/"))
+            startActivity(intent)
         }
     }
 
