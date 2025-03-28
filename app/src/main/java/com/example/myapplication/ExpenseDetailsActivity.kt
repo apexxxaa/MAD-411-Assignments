@@ -4,18 +4,16 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
-class ExpenseDetailsActivity: AppCompatActivity() {
+class ExpenseDetailsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_expense_details)
 
-        val name = intent.getStringExtra("Expense_name")
-        val amount = intent.getDoubleExtra("expense_amount", 0.0)
+        val name = intent.getStringExtra("EXPENSE_NAME") ?: "Please add your expense name"
+        val amount = intent.getDoubleExtra("EXPENSE_AMOUNT", 0.0)
 
-        val tvExpenseDetails = findViewById<TextView>(R.id.tvExpenseDetails)
-        tvExpenseDetails.text = "Expense: $name \n Amount: $amount"
-
-
+        findViewById<TextView>(R.id.tvExpenseName).text = "Expense Name: $name"
+        findViewById<TextView>(R.id.tvExpenseAmount).text = "Expense Amount: $%.2f".format(amount)
     }
 }

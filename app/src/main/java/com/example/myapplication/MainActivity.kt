@@ -19,15 +19,17 @@ reference: https://developer.android.com/topic/libraries/view-binding?hl=en
  */
 class MainActivity : AppCompatActivity() {
 
-//empty box that will store things from the screen
+    //empty box that will store things from the screen
     private lateinit var etExpenseNameId: EditText
     private lateinit var etEnterAmount: EditText
     private lateinit var btnAddExpense: Button
     private val expenses = mutableListOf<Expense>()
     private lateinit var expenseAdapter: ExpenseAdapter
 
+
     private lateinit var recyclerViewExpenses: RecyclerView
     private lateinit var btnFinancialTips: Button
+    private lateinit var footerFragment: FooterFragment
 
 
     //this will load screen from aactivity.xml
@@ -48,7 +50,7 @@ class MainActivity : AppCompatActivity() {
 
 
         recyclerViewExpenses.layoutManager = LinearLayoutManager(this)
-        expenseAdapter = ExpenseAdapter(expenses)
+        expenseAdapter = ExpenseAdapter(expenses) {updateTotalExpenses()}
         recyclerViewExpenses.adapter = expenseAdapter
 
         //what happens when i click button
@@ -58,12 +60,15 @@ class MainActivity : AppCompatActivity() {
 
             //checking if user typed anything or not if they did do this if not do nothing
             if (name.isNotEmpty() && amountText.isNotEmpty()) {
-                val amount = amountText.toDoubleOrNull() //if i type 10.0 as text convert it to number
+                val amount =
+                    amountText.toDoubleOrNull() //if i type 10.0 as text convert it to number
                 if (amount != null) {
 
                     val newExpense = Expense(name, amount)
                     expenses.add(newExpense)
-                    expenseAdapter.notifyItemInserted(expenses.size-1)
+                    expenseAdapter.notifyItemInserted(expenses.size - 1)
+
+                    updateTotalExpenses()
 
 
 
@@ -73,11 +78,37 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        btnFinancialTips.setOnClickListener{
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.investopedia.com/"))
+        btnFinancialTips.setOnClickListener {
+
+            var url = "https://www.investopedia.com/financial-tips-for-young-adults-11678397"
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)
         }
+
+        if (savedInstanceState == null) {
+            val headerFragment = HeaderFragment()
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.headerContainer, headerFragment)
+                .commit()
+        }
+
+        footerFragment = FooterFragment()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.footerContainer, footerFragment)
+            .commit()
     }
+
+    fun calculateTotalExpenses(): Double {
+        return expenses.sumOf { it.amount }
+    }
+
+    fun updateTotalExpenses() {
+        val footerFragment = supportFragmentManager.findFragmentById(R.id.footerContainer) as? FooterFragment
+        footerFragment?.updateTotalAmount(calculateTotalExpenses())
+    }
+
+
+
 
     override fun onStart(){
         super.onStart()
