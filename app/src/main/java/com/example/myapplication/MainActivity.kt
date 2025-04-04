@@ -13,7 +13,9 @@ import com.google.gson.Gson
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.reflect.TypeToken
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
@@ -40,46 +42,37 @@ class MainActivity : AppCompatActivity() {
     // Method to load expenses from the file
     private fun loadExpensesFromFile() {
         try {
-            val fileInputStream: FileInputStream = openFileInput("expenses.json")
-            val reader = InputStreamReader(fileInputStream)
-            val gson = Gson()
-            val expenseArray: Array<Expense> = gson.fromJson(reader, Array<Expense>::class.java)
-            expenses.clear()
-            expenses.addAll(expenseArray)
-            reader.close()
-        } catch (e: IOException) {
-            Log.e("MainActivity", "Error reading expenses file", e)
+            openFileInput("expenses.json").use { fis ->
+                val json = fis.bufferedReader().use { it.readText() }
+                val loadedExpenses: List<Expense> = Gson().fromJson(json, object : TypeToken<List<Expense>>() {}.type)
+                expenses.clear()
+                expenses.addAll(loadedExpenses)
+                expenseAdapter.notifyDataSetChanged()
+            }
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
         }
     }
 
     // Method to save expenses to the file
-    private fun saveExpensesToFile(expenses: MutableList<Expense>) {
-        try {
-            val fileOutputStream: FileOutputStream = openFileOutput("expenses.json", Context.MODE_PRIVATE)
-            val writer = OutputStreamWriter(fileOutputStream)
-            val gson = Gson()
-            gson.toJson(this.expenses, writer)
-            writer.close()
-        } catch (e: IOException) {
-            Log.e("MainActivity", "Error writing expenses file", e)
+    private fun saveExpensesToFile(expenses: List<Expense>) {
+        val json = Gson().toJson(expenses) // Convert the expenses list to JSON
+        openFileOutput("expenses.json", MODE_PRIVATE).use { fos ->
+            fos.write(json.toByteArray())
         }
     }
 
-    fun deleteExpense(position: Int) {
-        expenses.removeAt(position)
-        saveExpensesToFile(expenses) // Save after deletion
-        updateTotalExpenses()
-    }
 
 
 
-    //this will load screen from aactivity.xml
+
+
+    //this will load screen from activity.xml
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Log.d("ActivityLifeCycle", "OnCreate called")
 
-        loadExpensesFromFile()
 
         /*this will finds the buttons and text fields from xml and connects them to the kotlin
         * SO now i can read what user will type and changes things on the screen
@@ -92,10 +85,11 @@ class MainActivity : AppCompatActivity() {
 
 
         recyclerViewExpenses.layoutManager = LinearLayoutManager(this)
-        val expenseAdapter = ExpenseAdapter(expenses) { position ->
-            deleteExpense(position)
+        expenseAdapter = ExpenseAdapter(expenses) { position ->
+            deleteExpense(position)  // Call the deleteExpense method when the delete button is clicked
         }
         recyclerViewExpenses.adapter = expenseAdapter
+        loadExpensesFromFile()
 
         //what happens when i click button
         btnAddExpense.setOnClickListener {
@@ -155,7 +149,15 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    fun deleteExpense(position: Int) {
+        expenses.removeAt(position)
 
+        expenseAdapter.notifyItemRemoved(position)
+
+        saveExpensesToFile(expenses)
+
+        updateTotalExpenses()
+    }
 
 
 

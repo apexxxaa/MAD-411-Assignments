@@ -22,7 +22,11 @@ class ExpenseAdapter(
 
         init {
             deleteButton.setOnClickListener {
-                deleteExpenseCallback(adapterPosition)
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION){
+                    deleteExpenseCallback(adapterPosition)
+
+                }
 
             }
         }
@@ -53,8 +57,8 @@ class ExpenseAdapter(
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
             val intent = Intent(context, ExpenseDetailsActivity::class.java)
-            intent.putExtra("Expense_name", expense.name)
-            intent.putExtra("Expense_Amount", expense.amount)
+            intent.putExtra("EXPENSE_NAME", expense.name)
+            intent.putExtra("EXPENSE_AMOUNT", expense.amount)
             context.startActivity(intent)
         }
 

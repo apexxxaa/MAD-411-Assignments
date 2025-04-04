@@ -9,4 +9,5 @@
     <string name="expense_details">expense details</string>
     <string name="show_details">Show Details</string>
     <string name="financial_tips">Financial Tips</string>
+    <string name="enterAmount">Enter Amount</string>
 </resources>
