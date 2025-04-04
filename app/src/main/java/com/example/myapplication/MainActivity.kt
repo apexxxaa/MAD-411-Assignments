@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -7,11 +8,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.EditText
+
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.IOException
 
 /*
 reference: https://developer.android.com/topic/libraries/view-binding?hl=en
@@ -106,6 +109,9 @@ class MainActivity : AppCompatActivity() {
         val footerFragment = supportFragmentManager.findFragmentById(R.id.footerContainer) as? FooterFragment
         footerFragment?.updateTotalAmount(calculateTotalExpenses())
     }
+
+
+
 
 
 
