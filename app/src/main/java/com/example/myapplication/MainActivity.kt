@@ -1,6 +1,5 @@
 package com.example.myapplication
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -14,12 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.reflect.TypeToken
-import java.io.FileInputStream
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 
 /*
 reference: https://developer.android.com/topic/libraries/view-binding?hl=en
