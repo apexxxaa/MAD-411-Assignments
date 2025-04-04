@@ -5,16 +5,19 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.EditText
+import com.google.gson.Gson
 
-import android.widget.LinearLayout
-import android.widget.TextView
+
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 
 /*
 reference: https://developer.android.com/topic/libraries/view-binding?hl=en
@@ -34,6 +37,41 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnFinancialTips: Button
     private lateinit var footerFragment: FooterFragment
 
+    // Method to load expenses from the file
+    private fun loadExpensesFromFile() {
+        try {
+            val fileInputStream: FileInputStream = openFileInput("expenses.json")
+            val reader = InputStreamReader(fileInputStream)
+            val gson = Gson()
+            val expenseArray: Array<Expense> = gson.fromJson(reader, Array<Expense>::class.java)
+            expenses.clear()
+            expenses.addAll(expenseArray)
+            reader.close()
+        } catch (e: IOException) {
+            Log.e("MainActivity", "Error reading expenses file", e)
+        }
+    }
+
+    // Method to save expenses to the file
+    private fun saveExpensesToFile(expenses: MutableList<Expense>) {
+        try {
+            val fileOutputStream: FileOutputStream = openFileOutput("expenses.json", Context.MODE_PRIVATE)
+            val writer = OutputStreamWriter(fileOutputStream)
+            val gson = Gson()
+            gson.toJson(this.expenses, writer)
+            writer.close()
+        } catch (e: IOException) {
+            Log.e("MainActivity", "Error writing expenses file", e)
+        }
+    }
+
+    fun deleteExpense(position: Int) {
+        expenses.removeAt(position)
+        saveExpensesToFile(expenses) // Save after deletion
+        updateTotalExpenses()
+    }
+
+
 
     //this will load screen from aactivity.xml
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         Log.d("ActivityLifeCycle", "OnCreate called")
 
+        loadExpensesFromFile()
 
         /*this will finds the buttons and text fields from xml and connects them to the kotlin
         * SO now i can read what user will type and changes things on the screen
@@ -53,7 +92,9 @@ class MainActivity : AppCompatActivity() {
 
 
         recyclerViewExpenses.layoutManager = LinearLayoutManager(this)
-        expenseAdapter = ExpenseAdapter(expenses) {updateTotalExpenses()}
+        val expenseAdapter = ExpenseAdapter(expenses) { position ->
+            deleteExpense(position)
+        }
         recyclerViewExpenses.adapter = expenseAdapter
 
         //what happens when i click button
@@ -73,13 +114,16 @@ class MainActivity : AppCompatActivity() {
 
                     updateTotalExpenses()
 
-
+                    saveExpensesToFile(expenses)
 
                     etExpenseNameId.text.clear()
                     etEnterAmount.text.clear()
                 }
             }
         }
+
+
+
 
         btnFinancialTips.setOnClickListener {
 
