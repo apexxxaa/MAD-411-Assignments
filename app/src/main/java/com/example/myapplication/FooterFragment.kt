@@ -1,6 +1,5 @@
 package com.example.myapplication
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,24 +9,21 @@ import androidx.fragment.app.Fragment
 
 class FooterFragment : Fragment() {
 
-    private lateinit var totalAmountTextView: TextView
+    private lateinit var footerTextView: TextView
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?,
     ): View? {
-        val view = inflater.inflate(R.layout.footer_fragment, container, false)
-        totalAmountTextView = view.findViewById(R.id.tvTotalAmount)
-        return view
+        return inflater.inflate(R.layout.footer_fragment, container, false)
+    }
 
-
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        footerTextView = view.findViewById(R.id.footerTextView)
     }
 
     fun updateTotalAmount(total: Double) {
-        view?.findViewById<TextView>(R.id.tvTotalAmount)?.text = "Total Expenses: $$total"
+        footerTextView.text = "Total Expenses: $%.2f".format(total)
     }
-
-
-
 }

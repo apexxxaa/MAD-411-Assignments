@@ -13,7 +13,7 @@
         tools:ignore="MissingConstraints">
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/headerTextView"
             android:layout_width="233dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
