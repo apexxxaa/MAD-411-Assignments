@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -10,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +20,7 @@ import com.google.gson.Gson
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.util.Calendar
 
 private const val FILE_NAME = "expenses.txt"
 
@@ -31,6 +34,8 @@ class MainFragment : Fragment() {
 
     private val expenses = mutableListOf<Expense>()
     private lateinit var expenseAdapter: ExpenseAdapter
+    private var selectedDate: String? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -70,7 +75,7 @@ class MainFragment : Fragment() {
             if (name.isNotEmpty() && amountText.isNotEmpty()) {
                 val amount = amountText.toDoubleOrNull()
                 if (amount != null) {
-                    val newExpense = Expense(name, amount)
+                    val newExpense = Expense(name, amount, selectedDate ?: "No date")
                     expenses.add(newExpense)
                     expenseAdapter.notifyItemInserted(expenses.size - 1)
                     updateTotalExpenses()
@@ -78,6 +83,7 @@ class MainFragment : Fragment() {
 
                     etExpenseNameId.text.clear()
                     etEnterAmount.text.clear()
+                    selectedDate = null
                 } else {
                     Toast.makeText(requireContext(), "Please enter a valid amount", Toast.LENGTH_SHORT).show()
                 }
@@ -103,6 +109,25 @@ class MainFragment : Fragment() {
                 .replace(R.id.headerContainer, HeaderFragment())
                 .commit()
         }
+
+        //date picker
+        val btnSelectDate = view.findViewById<TextView>(R.id.btnSelectDate)
+
+        btnSelectDate.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+            val datePickerDialog = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+                val selectedDateStr = "$selectedYear-${selectedMonth + 1}-$selectedDay"
+                btnSelectDate.text = selectedDateStr
+                selectedDate = selectedDateStr
+            }, year, month, day)
+
+            datePickerDialog.show()
+        }
+
 
     }
 
