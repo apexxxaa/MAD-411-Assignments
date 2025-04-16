@@ -13,9 +13,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.services.OverdueCheckService
 import com.google.gson.Gson
 import java.io.File
 import java.io.FileNotFoundException
@@ -35,6 +37,7 @@ class MainFragment : Fragment() {
     private val expenses = mutableListOf<Expense>()
     private lateinit var expenseAdapter: ExpenseAdapter
     private var selectedDate: String? = null
+
 
 
     override fun onCreateView(
@@ -111,9 +114,9 @@ class MainFragment : Fragment() {
         }
 
         //date picker
-        val btnSelectDate = view.findViewById<TextView>(R.id.btnSelectDate)
+        val selectDateButton = view.findViewById<Button>(R.id.btnSelectDate)
 
-        btnSelectDate.setOnClickListener {
+        selectDateButton.setOnClickListener {
             val calendar = Calendar.getInstance()
             val year = calendar.get(Calendar.YEAR)
             val month = calendar.get(Calendar.MONTH)
@@ -121,12 +124,17 @@ class MainFragment : Fragment() {
 
             val datePickerDialog = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
                 val selectedDateStr = "$selectedYear-${selectedMonth + 1}-$selectedDay"
-                btnSelectDate.text = selectedDateStr
+                selectDateButton.text = selectedDateStr
                 selectedDate = selectedDateStr
             }, year, month, day)
 
             datePickerDialog.show()
         }
+//Trigger the service on creation AFTER the view is created
+
+        val serviceIntent = Intent(requireContext(), OverdueCheckService::class.java)
+        ContextCompat.startForegroundService(requireContext(), serviceIntent)
+
 
 
     }
