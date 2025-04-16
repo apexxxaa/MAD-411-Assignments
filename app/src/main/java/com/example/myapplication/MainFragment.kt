@@ -17,14 +17,23 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.myapplication.services.OverdueCheckService
+import com.example.myapplication.services.costCalculationWorker
 import com.google.gson.Gson
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 private const val FILE_NAME = "expenses.txt"
+
 
 class MainFragment : Fragment() {
 
@@ -49,6 +58,7 @@ class MainFragment : Fragment() {
 
 
     }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -135,7 +145,22 @@ class MainFragment : Fragment() {
         val serviceIntent = Intent(requireContext(), OverdueCheckService::class.java)
         ContextCompat.startForegroundService(requireContext(), serviceIntent)
 
+// Schedule periodic cost calculation with WorkManager
+        val workRequest = PeriodicWorkRequestBuilder<costCalculationWorker>(
+            7, TimeUnit.DAYS // Change to 15 minute for testing (15 is min)
+        )
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+                    .build()
+            )
+            .build()
 
+        WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+            "costCalculationWork",
+            ExistingPeriodicWorkPolicy.KEEP, // prevent duplicates
+            workRequest
+        )
 
     }
 
