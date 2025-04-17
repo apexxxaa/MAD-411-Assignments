@@ -1,8 +1,10 @@
 package com.example.myapplication
 
 import android.app.DatePickerDialog
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -15,14 +17,17 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.myapplication.fragments.FooterFragment
+import com.example.myapplication.fragments.HeaderFragment
+import com.example.myapplication.receiver.SystemEventReceiver
 import com.example.myapplication.services.OverdueCheckService
 import com.example.myapplication.services.costCalculationWorker
 import com.google.gson.Gson
@@ -34,7 +39,6 @@ import java.util.concurrent.TimeUnit
 
 private const val FILE_NAME = "expenses.txt"
 
-
 class MainFragment : Fragment() {
 
     private lateinit var etExpenseNameId: EditText
@@ -42,11 +46,13 @@ class MainFragment : Fragment() {
     private lateinit var btnAddExpense: Button
     private lateinit var recyclerViewExpenses: RecyclerView
     private lateinit var btnFinancialTips: Button
+    private lateinit var syncStatusText: TextView
+    private lateinit var systemReceiver: BroadcastReceiver
 
     private val expenses = mutableListOf<Expense>()
     private lateinit var expenseAdapter: ExpenseAdapter
     private var selectedDate: String? = null
-
+    private lateinit var viewModel: ExpenseViewModel
 
 
     override fun onCreateView(
@@ -55,32 +61,23 @@ class MainFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View? {
         return inflater.inflate(R.layout.fragment_main, container, false)
-
-
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize views
         etExpenseNameId = view.findViewById(R.id.etExpenseNameId)
         etEnterAmount = view.findViewById(R.id.etEnterAmount)
         btnAddExpense = view.findViewById(R.id.btnAddExpense)
         recyclerViewExpenses = view.findViewById(R.id.recyclerViewExpenses)
         btnFinancialTips = view.findViewById(R.id.btnFinancialTips)
+        syncStatusText = view.findViewById(R.id.syncStatusText)
 
-        // Load expenses from file
         expenses.addAll(loadExpensesFromFile(requireContext()))
-
-        // Setup RecyclerView
         recyclerViewExpenses.layoutManager = LinearLayoutManager(requireContext())
-        expenseAdapter = ExpenseAdapter(expenses) {
-            updateTotalExpenses()
-        }
+        expenseAdapter = ExpenseAdapter(expenses) { updateTotalExpenses() }
         recyclerViewExpenses.adapter = expenseAdapter
 
-        // Add expense button click listener
         btnAddExpense.setOnClickListener {
             val name = etExpenseNameId.text.toString()
             val amountText = etEnterAmount.text.toString()
@@ -90,10 +87,11 @@ class MainFragment : Fragment() {
                 if (amount != null) {
                     val newExpense = Expense(name, amount, selectedDate ?: "No date")
                     expenses.add(newExpense)
+                    viewModel.addExpense(newExpense)
+
                     expenseAdapter.notifyItemInserted(expenses.size - 1)
                     updateTotalExpenses()
                     saveExpensesToFile(requireContext(), expenses)
-
                     etExpenseNameId.text.clear()
                     etEnterAmount.text.clear()
                     selectedDate = null
@@ -101,16 +99,17 @@ class MainFragment : Fragment() {
                     Toast.makeText(requireContext(), "Please enter a valid amount", Toast.LENGTH_SHORT).show()
                 }
             }
+            if (viewModel.expenses.value.isNullOrEmpty()) {
+                viewModel.setExpenses(loadExpensesFromFile(requireContext()).toMutableList())
+            }
         }
 
-        // Financial tips button
         btnFinancialTips.setOnClickListener {
             val url = "https://www.investopedia.com/financial-tips-for-young-adults-11678397"
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)
         }
 
-        // Load FooterFragment into the footer container if not already loaded
         if (childFragmentManager.findFragmentById(R.id.footerContainer) == null) {
             childFragmentManager.beginTransaction()
                 .replace(R.id.footerContainer, FooterFragment())
@@ -123,9 +122,7 @@ class MainFragment : Fragment() {
                 .commit()
         }
 
-        //date picker
         val selectDateButton = view.findViewById<Button>(R.id.btnSelectDate)
-
         selectDateButton.setOnClickListener {
             val calendar = Calendar.getInstance()
             val year = calendar.get(Calendar.YEAR)
@@ -140,28 +137,49 @@ class MainFragment : Fragment() {
 
             datePickerDialog.show()
         }
-//Trigger the service on creation AFTER the view is created
 
         val serviceIntent = Intent(requireContext(), OverdueCheckService::class.java)
         ContextCompat.startForegroundService(requireContext(), serviceIntent)
 
-// Schedule periodic cost calculation with WorkManager
-        val workRequest = PeriodicWorkRequestBuilder<costCalculationWorker>(
-            7, TimeUnit.DAYS // Change to 15 minute for testing (15 is min)
-        )
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-                    .build()
-            )
+        val workRequest = PeriodicWorkRequestBuilder<costCalculationWorker>(7, TimeUnit.DAYS)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build())
             .build()
 
         WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
             "costCalculationWork",
-            ExistingPeriodicWorkPolicy.KEEP, // prevent duplicates
+            ExistingPeriodicWorkPolicy.KEEP,
             workRequest
         )
+        systemReceiver = SystemEventReceiver()
 
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_BATTERY_LOW)
+            addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+        }
+
+        requireContext().registerReceiver(systemReceiver, filter)
+
+
+        SyncStatusManager.isSyncActive.observe(viewLifecycleOwner) { isActive ->
+            val syncLabel = view.findViewById<TextView>(R.id.syncStatusText)
+            syncLabel.text = if (isActive) "Sync Active" else "Sync Paused"
+        }
+
+        viewModel = ViewModelProvider(requireActivity())[ExpenseViewModel::class.java]
+        viewModel.expenses.observe(viewLifecycleOwner) {
+            expenseAdapter.updateExpenses(it)
+        }
+
+        viewModel.total.observe(viewLifecycleOwner) {
+            val footerFragment = childFragmentManager.findFragmentById(R.id.footerContainer) as? FooterFragment
+            footerFragment?.updateTotalAmount(it)
+        }
+
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requireContext().unregisterReceiver(systemReceiver)
     }
 
     private fun saveExpensesToFile(context: Context, expenseList: List<Expense>) {
@@ -194,15 +212,12 @@ class MainFragment : Fragment() {
             Log.e("FileStorage", "Error reading file: ${e.message}")
         }
         return expenseList
-
-
-
     }
+
+
 
     private fun updateTotalExpenses() {
-        val footerFragment =
-            childFragmentManager.findFragmentById(R.id.footerContainer) as? FooterFragment
+        val footerFragment = childFragmentManager.findFragmentById(R.id.footerContainer) as? FooterFragment
         footerFragment?.updateTotalAmount(expenses.sumOf { it.amount })
     }
-
 }

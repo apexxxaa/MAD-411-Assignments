@@ -54,6 +54,12 @@ class ExpenseAdapter (private val expenses: MutableList<Expense>, private var up
 
 
 
+
+    }
+    fun updateExpenses(newExpenses: List<Expense>) {
+        expenses.clear()
+        expenses.addAll(newExpenses)
+        notifyDataSetChanged()
     }
 
 
