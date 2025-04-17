@@ -6,11 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import com.example.myapplication.ExpenseViewModel
 import com.example.myapplication.R
 
 class FooterFragment : Fragment() {
 
-    private lateinit var footerTextView: TextView
+    private var totalTextView: TextView? = null
+    private var viewModel: ExpenseViewModel? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -21,10 +24,13 @@ class FooterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        footerTextView = view.findViewById(R.id.footerTextView)
+
+        totalTextView = view.findViewById(R.id.footerTextView)
+
+        viewModel = ViewModelProvider(requireActivity())[ExpenseViewModel::class.java]
+
+
     }
 
-    fun updateTotalAmount(total: Double) {
-        footerTextView.text = "Total Expenses: $%.2f".format(total)
-    }
+
 }

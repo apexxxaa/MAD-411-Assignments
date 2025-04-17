@@ -1,3 +1,3 @@
 package com.example.myapplication
 
-data class Expense(val name: String, val amount: Double, val date: String)
+data class Expense(val id: Int, val name: String, val amount: Double, val date: String)

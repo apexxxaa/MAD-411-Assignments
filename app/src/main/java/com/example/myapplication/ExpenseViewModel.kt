@@ -1,36 +1,28 @@
 package com.example.myapplication
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.myapplication.Data.ExpenseDatabase
+import com.example.myapplication.Data.ExpenseEntity
+import kotlinx.coroutines.launch
 
-class ExpenseViewModel : ViewModel() {
+class ExpenseViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val prExpenses = MutableLiveData<MutableList<Expense>>(mutableListOf())
-    val expenses: LiveData<MutableList<Expense>> = prExpenses
+    private val expenseDao = ExpenseDatabase.getDatabase(application).expenseDao()
+    val allExpenses: LiveData<List<ExpenseEntity>> = expenseDao.getAllExpenses()
+    val totalAmount: LiveData<Double> = expenseDao.getTotalAmount()
 
-    private val prTotal = MutableLiveData<Double> (0.0)
-    val total : LiveData<Double> = prTotal
-
-    fun addExpense(expense: Expense){
-        prExpenses.value?.add(expense)
-        prExpenses.value = prExpenses.value
-        calculateTotal()
+    fun addExpense(name: String, amount: Double, date: String) {
+        viewModelScope.launch {
+            expenseDao.insertExpense(ExpenseEntity(name = name, amount = amount, date = date))
+        }
     }
 
-    fun removeExpense(index: Int) {
-        prExpenses.value?.removeAt(index)
-        prExpenses.value = prExpenses.value
-        calculateTotal()
+    fun deleteExpense(expense: ExpenseEntity) {
+        viewModelScope.launch {
+            expenseDao.deleteExpense(expense)
+        }
     }
-
-    private fun calculateTotal() {
-        prTotal.value = prExpenses.value?.sumOf { it.amount } ?: 0.0
-    }
-
-    fun setExpenses(list: MutableList<Expense>){
-        prExpenses.value = list
-        calculateTotal()
-    }
-
 }

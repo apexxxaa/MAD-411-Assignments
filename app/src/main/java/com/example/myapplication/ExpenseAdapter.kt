@@ -6,63 +6,58 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.ExpenseDetailsActivity
 
-class ExpenseAdapter (private val expenses: MutableList<Expense>, private var updateTotalExpense: () -> Unit): RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
+class ExpenseAdapter(
+    private val onDeleteClicked: (Expense) -> Unit
+) : ListAdapter<Expense, ExpenseAdapter.ExpenseViewHolder>(ExpenseDiffCallback()) {
 
-    class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
+    inner class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val expenseNameTextView: TextView = itemView.findViewById(R.id.expenseNameTextView)
         val expenseAmountTextView: TextView = itemView.findViewById(R.id.expenseAmountTextView)
         val deleteButton: Button = itemView.findViewById(R.id.deleteButton)
         val btnShowDetails: Button = itemView.findViewById(R.id.btnShowDetails)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : ExpenseViewHolder{
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.expense_item, parent, false)
         return ExpenseViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int){
-        val expense = expenses[position]
+    override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
+        val expense = getItem(position)
+
         holder.expenseNameTextView.text = expense.name
         holder.expenseAmountTextView.text = "$${expense.amount}"
 
-
-        holder.deleteButton.setOnClickListener{
-            expenses.removeAt(position)
-            notifyItemRemoved(position)
-            updateTotalExpense()
-
+        holder.deleteButton.setOnClickListener {
+            holder.itemView.animate()
+                .alpha(0f)
+                .translationX(holder.itemView.width.toFloat())
+                .setDuration(300)
+                .withEndAction {
+                    onDeleteClicked(expense)
+                }
+                .start()
         }
 
-        holder.itemView.setOnClickListener{
-            val context = holder.itemView.context
-            val intent = Intent(context, ExpenseDetailsActivity::class.java)
-            intent.putExtra("Expense_name", expense.name)
-            intent.putExtra("Expense_Amount", expense.amount)
-            context.startActivity(intent)
-        }
 
         holder.btnShowDetails.setOnClickListener {
-            val intent = Intent(holder.itemView.context, ExpenseDetailsActivity::class.java).apply {
-                putExtra("EXPENSE_NAME", expense.name)
-                putExtra("EXPENSE_AMOUNT", expense.amount)
+            val isVisible = holder.expenseAmountTextView.visibility == View.VISIBLE
+            if (isVisible) {
+                holder.expenseAmountTextView.animate().alpha(0f).setDuration(300).withEndAction {
+                    holder.expenseAmountTextView.visibility = View.GONE
+                }.start()
+                holder.btnShowDetails.text = "Show Details"
+            } else {
+                holder.expenseAmountTextView.visibility = View.VISIBLE
+                holder.expenseAmountTextView.alpha = 0f
+                holder.expenseAmountTextView.animate().alpha(1f).setDuration(300).start()
+                holder.btnShowDetails.text = "Hide Details"
             }
-
-            holder.itemView.context.startActivity(intent)
         }
 
-
-
-
     }
-    fun updateExpenses(newExpenses: List<Expense>) {
-        expenses.clear()
-        expenses.addAll(newExpenses)
-        notifyDataSetChanged()
-    }
-
-
-    override fun getItemCount(): Int = expenses.size
-
 }
